@@ -9,9 +9,10 @@ import logging
 import os
 from io import BytesIO
 
-from epd7in5_V2 import EPD
 from flask import Flask, jsonify, request
 from PIL import Image
+
+from epd import EPD
 
 # Configure logging
 logging.basicConfig(
@@ -131,13 +132,13 @@ def api_display():
     """
     try:
         # Check if file is present in request
-        if 'image' not in request.files:
+        if "image" not in request.files:
             return jsonify({"error": "No image file provided"}), 400
 
-        file = request.files['image']
+        file = request.files["image"]
 
         # Check if file is empty
-        if file.filename == '':
+        if file.filename == "":
             return jsonify({"error": "Empty filename"}), 400
 
         logger.info(f"Received display request with image file: {file.filename}")

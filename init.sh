@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Exit on error
+set -e
+
+echo "Initializing rpi-epd-server project..."
+
+# Check if .env file exists
+if [ ! -f .env ]; then
+    echo "Error: .env file not found"
+    exit 1
+fi
+
+# Read EPD_FILE value from .env
+EPD_FILE=$(grep -E "^EPD_FILE=" .env | cut -d '=' -f2)
+
+if [ -z "$EPD_FILE" ]; then
+    echo "Error: EPD_FILE not found in .env"
+    exit 1
+fi
+
+echo "Found EPD_FILE: $EPD_FILE"
+
+# GitHub raw content URL
+GITHUB_URL="https://raw.githubusercontent.com/waveshareteam/e-Paper/master/RaspberryPi_JetsonNano/python/lib/waveshare_epd/${EPD_FILE}"
+
+echo "Downloading ${EPD_FILE} from GitHub..."
+
+# Download the file
+if ! curl -fSL "$GITHUB_URL" -o epd.py; then
+    echo "Error: Failed to download ${EPD_FILE}"
+    echo "URL attempted: ${GITHUB_URL}"
+    exit 1
+fi
+
+echo "Successfully downloaded and renamed to epd.py"
+
+# Run uv sync
+echo "Running uv sync..."
+if ! command -v uv &> /dev/null; then
+    echo "Error: uv command not found. Please install uv first."
+    exit 1
+fi
+
+uv sync
+
+echo "Initialization complete!"
