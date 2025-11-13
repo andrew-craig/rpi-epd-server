@@ -35,6 +35,18 @@ fi
 
 echo "Successfully downloaded and renamed to epd.py"
 
+CONFIG_URL="https://raw.githubusercontent.com/waveshareteam/e-Paper/master/RaspberryPi_JetsonNano/python/lib/waveshare_epd/epdconfig.py"
+
+echo "Downloading config file from GitHub..."
+
+# Download the file
+if ! curl -fSL "$CONFIG_URL" -o epd.py; then
+    echo "Error: Failed to download epdconfig.py"
+    echo "URL attempted: ${CONFIG_URL}"
+    exit 1
+fi
+
+
 # Run uv sync
 echo "Running uv sync..."
 if ! command -v uv &> /dev/null; then
