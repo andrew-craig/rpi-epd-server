@@ -42,44 +42,51 @@ Make sure uv is installed for Python package management. Follow the [instruction
 Run the initialisation script
 > ./init.sh
 
-### 4. Setup as a service
+### 4. Setup as a Service
 
-Create `/etc/systemd/system/rpi-epd-server.service`:
+The project includes a systemd service file and gunicorn configuration for production deployment.
 
-```ini
-[Unit]
-Description=Raspberry Pi EPD Controller
-After=network.target
+**Install the service:**
 
-[Service]
-Type=simple
-User=pi
-WorkingDirectory=/home/{user}/rpi-epd-server
-EnvironmentFile=/home/{user}/rpi-epd-server/.env
-ExecStart=uv run /home/pi/rpi-epd-server/server.py
-Restart=always
-RestartSec=10
-StandardOutput=journal
-StandardError=journal
+```bash
+# Copy the service file to systemd directory
+sudo cp rpi-epd-server.service /etc/systemd/system/
 
-[Install]
-WantedBy=multi-user.target
+# Edit the service file to match your username and paths
+sudo nano /etc/systemd/system/rpi-epd-server.service
+# Replace 'operator' with your actual username
+# Update paths if you installed to a different location
+
+# Ensure your user has access to GPIO/SPI
+sudo usermod -a -G gpio,spi $USER
+# Log out and back in for group changes to take effect
 ```
 
+**Start the service:**
 
-### 5. Start the Service
+```bash
+# Reload systemd to recognize the new service
+sudo systemctl daemon-reload
 
-Reload systemd to recognize new service
-> sudo systemctl daemon-reload
+# Enable service to start on boot
+sudo systemctl enable rpi-epd-server.service
 
-Enable service to start on boot
-> sudo systemctl enable rpi-epd-server.service
+# Start service now
+sudo systemctl start rpi-epd-server.service
 
-Start service now
-> sudo systemctl start rpi-epd-server.service
+# Check service status
+sudo systemctl status rpi-epd-server.service
+```
 
-Check service status
-> sudo systemctl status rpi-epd-server.service
+**Configuration:**
+
+The service uses `gunicorn_config.py` for production settings:
+- Single worker process (required for e-ink display hardware access)
+- 120 second timeout for display operations
+- Automatic worker restart after 1000 requests
+- Logging to systemd journal
+
+You can modify `gunicorn_config.py` to adjust these settings if needed.
 
 
 ## API Documentation
@@ -133,23 +140,23 @@ curl -X POST http://raspberrypi.local:5000/api/display \
 
 ```bash
 # View recent logs
-sudo journalctl -u display-controller.service -n 50
+sudo journalctl -u rpi-epd-server.service -n 50
 
 # Follow logs in real-time
-sudo journalctl -u display-controller.service -f
+sudo journalctl -u rpi-epd-server.service -f
 ```
 
 ### Manage Service
 
 ```bash
 # Stop service
-sudo systemctl stop display-controller.service
+sudo systemctl stop rpi-epd-server.service
 
 # Restart service
-sudo systemctl restart display-controller.service
+sudo systemctl restart rpi-epd-server.service
 
 # Disable auto-start
-sudo systemctl disable display-controller.service
+sudo systemctl disable rpi-epd-server.service
 ```
 
 ### SPI Not Enabled
@@ -182,7 +189,7 @@ sudo python3 display-client.py
 **Solutions**:
 1. Check wiring connections between display and Raspberry Pi
 2. Verify display power supply
-3. Check logs for hardware errors: `journalctl -u display-controller.service -n 100`
+3. Check logs for hardware errors: `journalctl -u rpi-epd-server.service -n 100`
 4. Test display with Waveshare example code to verify hardware
 
 ### Image Too Large Warning
@@ -205,7 +212,7 @@ sudo python3 display-client.py
 **Error**: Image generator cannot connect to display controller
 
 **Solutions**:
-1. Verify display controller is running: `sudo systemctl status display-controller.service`
+1. Verify display controller is running: `sudo systemctl status rpi-epd-server.service`
 2. Check firewall rules: `sudo ufw status`
 3. Test local connectivity: `curl http://localhost:5000/api/display`
 4. Verify correct IP address and port in image generator configuration

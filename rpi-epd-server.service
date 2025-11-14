@@ -1,0 +1,47 @@
+[Unit]
+Description=Raspberry Pi EPD Display Server
+Documentation=https://github.com/yourusername/rpi-epd-server
+After=network.target
+
+[Service]
+Type=notify
+# User and group to run the service as
+# Replace 'operator' with your actual username
+User=operator
+Group=operator
+
+# Working directory
+WorkingDirectory=/home/operator/rpi-epd-server
+
+# Environment file for configuration
+EnvironmentFile=/home/operator/rpi-epd-server/.env
+
+# Add user to gpio and spi groups for hardware access
+SupplementaryGroups=gpio spi
+
+# Command to start the service
+ExecStart=/usr/bin/python3 -m gunicorn \
+    --config /home/operator/rpi-epd-server/gunicorn_config.py \
+    server:app
+
+# Restart policy
+Restart=on-failure
+RestartSec=5s
+StartLimitBurst=5
+StartLimitIntervalSec=300
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=rpi-epd-server
+
+# Security hardening (optional but recommended)
+# Uncomment these for additional security
+# PrivateTmp=true
+# NoNewPrivileges=true
+# ProtectSystem=strict
+# ProtectHome=true
+# ReadWritePaths=/home/operator/rpi-epd-server
+
+[Install]
+WantedBy=multi-user.target
