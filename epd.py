@@ -33,8 +33,6 @@ import os
 import time
 from ctypes import CDLL
 
-from PIL import Image, ImageShow
-
 logger = logging.getLogger(__name__)
 
 
@@ -419,28 +417,3 @@ class EPD:
 
 
 ### END OF FILE ###
-
-
-class EPDTest:
-    ## Used for testing
-    ## Replace EPD with EPDTest to generate preview images on desktop etc.
-
-    def __init__(self):
-        self.height = 800
-        self.width = 480
-
-    def init(self):
-        return True
-
-    def sleep(self):
-        return True
-
-    def Clear(self):
-        return True
-
-    def display(self, image):
-        ImageShow.show(image)
-        return True
-
-    def getbuffer(self, image):
-        return image

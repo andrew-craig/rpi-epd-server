@@ -47,13 +47,10 @@ if ! curl -fSL "$CONFIG_URL" -o epd.py; then
 fi
 
 
-# Run uv sync
-echo "Running uv sync..."
-if ! command -v uv &> /dev/null; then
-    echo "Error: uv command not found. Please install uv first."
-    exit 1
-fi
+# Install dependencies
+echo "Installing dependencies..."
+command sudo apt install -y python3-flask python3-gunicorn python3-pil
 
-uv sync
+command python3 -m venv venv
 
 echo "Initialization complete!"
