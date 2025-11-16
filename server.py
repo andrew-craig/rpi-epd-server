@@ -9,10 +9,14 @@ import logging
 import os
 from io import BytesIO
 
+from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from PIL import Image
 
 from epd import EPD
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
