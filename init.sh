@@ -24,27 +24,27 @@ echo "Found EPD_FILE: $EPD_FILE"
 # GitHub raw content URL
 GITHUB_URL="https://raw.githubusercontent.com/waveshareteam/e-Paper/master/RaspberryPi_JetsonNano/python/lib/waveshare_epd/${EPD_FILE}"
 
-echo "Downloading ${EPD_FILE} from GitHub..."
+#echo "Downloading ${EPD_FILE} from GitHub..."
 
 # Download the file
-if ! curl -fSL "$GITHUB_URL" -o epd.py; then
-    echo "Error: Failed to download ${EPD_FILE}"
-    echo "URL attempted: ${GITHUB_URL}"
-    exit 1
-fi
+#if ! curl -fSL "$GITHUB_URL" -o epd.py; then
+#    echo "Error: Failed to download ${EPD_FILE}"
+#    echo "URL attempted: ${GITHUB_URL}"
+#    exit 1
+#fi
 
-echo "Successfully downloaded and renamed to epd.py"
+#echo "Successfully downloaded and renamed to epd.py"
 
-CONFIG_URL="https://raw.githubusercontent.com/waveshareteam/e-Paper/master/RaspberryPi_JetsonNano/python/lib/waveshare_epd/epdconfig.py"
+#CONFIG_URL="https://raw.githubusercontent.com/waveshareteam/e-Paper/master/RaspberryPi_JetsonNano/python/lib/waveshare_epd/epdconfig.py"
 
-echo "Downloading config file from GitHub..."
+#echo "Downloading config file from GitHub..."
 
 # Download the file
-if ! curl -fSL "$CONFIG_URL" -o epd.py; then
-    echo "Error: Failed to download epdconfig.py"
-    echo "URL attempted: ${CONFIG_URL}"
-    exit 1
-fi
+#if ! curl -fSL "$CONFIG_URL" -o epd.py; then
+#    echo "Error: Failed to download epdconfig.py"
+#    echo "URL attempted: ${CONFIG_URL}"
+#    exit 1
+#fi
 
 
 # Install dependencies
