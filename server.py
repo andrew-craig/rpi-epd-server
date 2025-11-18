@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # Initialize Flask app
 app = Flask(__name__)
 
-# Global client instance
+# Global client instance - initialized at module level for Gunicorn compatibility
 client = None
 
 
@@ -128,6 +128,15 @@ class DisplayClient:
             raise
 
 
+def init_client():
+    """Initialize the display client if not already initialized."""
+    global client
+    if client is None:
+        logger.info("Initializing display client")
+        client = DisplayClient()
+    return client
+
+
 @app.route("/api/display", methods=["POST"])
 def api_display():
     """
@@ -150,10 +159,13 @@ def api_display():
         # Read image from uploaded file
         image_data = file.read()
         uploaded_image = Image.open(BytesIO(image_data))
+        logger.info("Successfully read image")
 
         # Call client.display with the uploaded image
         global client
         if client is None:
+            logger.info("Display not initialized. Displaying image failed.")
+
             return jsonify({"error": "Display client not initialized"}), 500
 
         client.display(uploaded_image)
@@ -170,9 +182,8 @@ def api_display():
 def main():
     """Entry point for display client."""
 
-    # Initialize display client
-    global client
-    client = DisplayClient()
+    # Ensure client is initialized (already done at module level, but safe to call again)
+    init_client()
 
     # Get configuration from environment
     host = os.environ.get("FLASK_HOST", "0.0.0.0")
@@ -183,6 +194,9 @@ def main():
     # Start Flask server
     app.run(host=host, port=port, debug=False)
 
+
+# Initialize client when module is loaded (for Gunicorn compatibility)
+init_client()
 
 if __name__ == "__main__":
     main()
