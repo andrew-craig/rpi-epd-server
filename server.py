@@ -36,14 +36,12 @@ class DisplayClient:
 
     def __init__(self):
         """Initialize display client."""
-        self._DISPLAY_WIDTH = int(os.environ.get("DISPLAY_WIDTH", 800))
-        self._DISPLAY_HEIGHT = int(os.environ.get("DISPLAY_HEIGHT", 480))
         self._DISPLAY_OFFSET_X = int(os.environ.get("DISPLAY_OFFSET_X", 0))
         self._DISPLAY_OFFSET_Y = int(os.environ.get("DISPLAY_OFFSET_Y", 0))
         self._BACKGROUND_COLOUR = (255, 255, 255)
         self.epd = EPD()
 
-        logger.info(f"Display client initialized")
+        logger.info(f"Display client initialized with dimensions {self.epd.width}x{self.epd.height}")
 
     def prepare_image(self, uploaded_image):
         """
@@ -57,7 +55,7 @@ class DisplayClient:
         """
         # Create a blank canvas
         img = Image.new(
-            "RGB", (self._DISPLAY_WIDTH, self._DISPLAY_HEIGHT), self._BACKGROUND_COLOUR
+            "RGB", (self.epd.width, self.epd.height), self._BACKGROUND_COLOUR
         )
 
         # Get dimensions of uploaded image
@@ -66,8 +64,8 @@ class DisplayClient:
 
         # Check if image fits within display dimensions
         if (
-            fetched_width <= self._DISPLAY_WIDTH
-            and fetched_height <= self._DISPLAY_HEIGHT
+            fetched_width <= self.epd.width
+            and fetched_height <= self.epd.height
         ):
             # Paste the image into the canvas
             img.paste(
@@ -80,7 +78,7 @@ class DisplayClient:
         else:
             logger.warning(
                 f"Image too large ({fetched_width}x{fetched_height}) for display "
-                f"({self._DISPLAY_WIDTH}x{self._DISPLAY_HEIGHT}), returning blank canvas"
+                f"({self.epd.width}x{self.epd.height}), returning blank canvas"
             )
 
         return img
@@ -176,6 +174,29 @@ def api_display():
 
     except Exception as e:
         logger.error(f"Error in /api/display endpoint: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/dimension", methods=["GET"])
+def api_dimension():
+    """
+    API endpoint to get EPD dimensions.
+    Returns the width and height of the currently initialized EPD.
+    """
+    try:
+        global client
+        if client is None or client.epd is None:
+            logger.warning("EPD not initialized for dimension request")
+            return jsonify({"error": "EPD not initialized"}), 500
+
+        width = client.epd.width
+        height = client.epd.height
+
+        logger.info(f"Returning EPD dimensions: {width}x{height}")
+        return jsonify({"width": width, "height": height}), 200
+
+    except Exception as e:
+        logger.error(f"Error in /api/dimension endpoint: {e}")
         return jsonify({"error": str(e)}), 500
 
 
