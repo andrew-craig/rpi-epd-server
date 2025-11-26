@@ -53,7 +53,7 @@ echo "Successfully configured epd.py"
 
 # Install dependencies
 echo "Installing dependencies..."
-command sudo apt install -y python3-flask python3-gunicorn python3-pil
+command sudo apt install -y python3-flask python3-gunicorn python3-pil python3-dotenv
 
 command python3 -m venv venv
 
