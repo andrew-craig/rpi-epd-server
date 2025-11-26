@@ -21,30 +21,34 @@ fi
 
 echo "Found EPD_FILE: $EPD_FILE"
 
-# GitHub raw content URL
-GITHUB_URL="https://raw.githubusercontent.com/waveshareteam/e-Paper/master/RaspberryPi_JetsonNano/python/lib/waveshare_epd/${EPD_FILE}"
+# GitHub raw content URLs
+GITHUB_BASE="https://raw.githubusercontent.com/waveshareteam/e-Paper/master/RaspberryPi_JetsonNano/python/lib/waveshare_epd"
+EPD_URL="${GITHUB_BASE}/${EPD_FILE}"
+CONFIG_URL="${GITHUB_BASE}/epdconfig.py"
 
-#echo "Downloading ${EPD_FILE} from GitHub..."
+echo "Downloading epdconfig.py from GitHub..."
+if ! curl -fSL "$CONFIG_URL" -o epdconfig.py; then
+    echo "Error: Failed to download epdconfig.py"
+    echo "URL attempted: ${CONFIG_URL}"
+    exit 1
+fi
+echo "Successfully downloaded epdconfig.py"
 
-# Download the file
-#if ! curl -fSL "$GITHUB_URL" -o epd.py; then
-#    echo "Error: Failed to download ${EPD_FILE}"
-#    echo "URL attempted: ${GITHUB_URL}"
-#    exit 1
-#fi
+echo "Downloading ${EPD_FILE} from GitHub..."
+if ! curl -fSL "$EPD_URL" -o "${EPD_FILE}"; then
+    echo "Error: Failed to download ${EPD_FILE}"
+    echo "URL attempted: ${EPD_URL}"
+    exit 1
+fi
+echo "Successfully downloaded ${EPD_FILE}"
 
-#echo "Successfully downloaded and renamed to epd.py"
+echo "Modifying ${EPD_FILE} to fix imports..."
+# Replace the relative import with absolute import
+sed -i 's/from \. import epdconfig/import epdconfig/g' "${EPD_FILE}"
 
-#CONFIG_URL="https://raw.githubusercontent.com/waveshareteam/e-Paper/master/RaspberryPi_JetsonNano/python/lib/waveshare_epd/epdconfig.py"
-
-#echo "Downloading config file from GitHub..."
-
-# Download the file
-#if ! curl -fSL "$CONFIG_URL" -o epd.py; then
-#    echo "Error: Failed to download epdconfig.py"
-#    echo "URL attempted: ${CONFIG_URL}"
-#    exit 1
-#fi
+# Rename to epd.py for use by server.py
+mv "${EPD_FILE}" epd.py
+echo "Successfully configured epd.py"
 
 
 # Install dependencies
