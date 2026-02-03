@@ -4,6 +4,7 @@ Gunicorn configuration file for rpi-epd-server
 
 import multiprocessing
 import os
+from logger import setup_logging
 
 # Server socket
 bind = f"{os.getenv('FLASK_HOST', '0.0.0.0')}:{os.getenv('FLASK_PORT', '5000')}"
@@ -24,6 +25,16 @@ loglevel = "info"
 accesslog = "-"  # Log to stdout
 errorlog = "-"  # Log to stderr
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
+
+
+def on_starting(server):
+    """Called just before the master process is initialized."""
+    setup_logging()
+
+
+def post_fork(server, worker):
+    """Called just after a worker has been forked."""
+    setup_logging()
 
 # Process naming
 proc_name = "rpi-epd-server"
