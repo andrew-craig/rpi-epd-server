@@ -14,14 +14,13 @@ from flask import Flask, jsonify, request
 from PIL import Image
 
 from epd import EPD
+from logger import setup_logging
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+# Configure JSON logging
+setup_logging()
 logger = logging.getLogger(__name__)
 
 # Initialize Flask app
