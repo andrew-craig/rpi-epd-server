@@ -74,6 +74,20 @@ class DisplayClient:
             logger.info(
                 f"Image pasted at offset ({self._DISPLAY_OFFSET_X}, {self._DISPLAY_OFFSET_Y})"
             )
+        elif ( 
+            fetched_width <= self.epd.height
+            and fetched_height <= self.epd.width
+        ):
+            # If image is rotated, rotate it back to fit display dimensions
+            uploaded_image = uploaded_image.rotate(90, expand=True)
+            img.paste(
+                uploaded_image,
+                (0 + self._DISPLAY_OFFSET_X, 0 + self._DISPLAY_OFFSET_Y),
+            )
+            logger.info(
+                f"Rotated and pasted image at offset ({self._DISPLAY_OFFSET_X}, {self._DISPLAY_OFFSET_Y})"
+            )
+
         else:
             logger.warning(
                 f"Image too large ({fetched_width}x{fetched_height}) for display "
