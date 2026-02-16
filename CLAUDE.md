@@ -45,6 +45,7 @@ EPD driver files (`epd.py`, `epdconfig.py`) are downloaded by `init.sh` from the
 
 - **POST /api/display** — Upload an image (multipart `image` field) to display on the e-ink screen
 - **GET /api/dimension** — Returns display dimensions as `{"width": N, "height": N}`
+- **POST /api/calibrate** — Run a 20-iteration display calibration sequence (blocking, ~200s) to determine optimal `DISPLAY_OFFSET_X`/`DISPLAY_OFFSET_Y` values
 
 ## Running
 
@@ -77,6 +78,7 @@ No automated test suite exists. Manual testing via curl:
 ```bash
 curl http://localhost:5000/api/dimension
 curl -X POST -F "image=@test.png" http://localhost:5000/api/display
+curl -X POST http://localhost:5000/api/calibrate
 ```
 
 ## CI/CD

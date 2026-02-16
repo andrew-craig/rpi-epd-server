@@ -10,6 +10,7 @@ Lightweight Flask API server that receives images and displays them on a Wavesha
 - Production-ready systemd service configuration
 - Gunicorn-based deployment for reliability
 - Display dimension query endpoint
+- Built-in display calibration tool for determining pixel offsets
 
 ## Prerequisites
 
@@ -248,6 +249,47 @@ curl http://raspberrypi.local:5000/api/dimension
 ```
 
 This endpoint is useful for image generators to dynamically determine the correct image size to generate.
+
+### POST /api/calibrate
+
+Runs a display calibration sequence to help determine the correct `DISPLAY_OFFSET_X` and `DISPLAY_OFFSET_Y` values for your display.
+
+**How it works:**
+
+The endpoint displays 20 frames (iterations 0–19), pausing 10 seconds between each. Every frame draws outward-pointing arrows in the four corners of the screen with the current offset number centered on the display. The arrows start flush with the pixel edges (offset 0) and move 1 pixel inward with each iteration.
+
+Watch the display during the sequence and note the offset number where the arrows first become fully visible — that value is the correct offset to set in your `.env` file.
+
+**Request:**
+- Method: `POST`
+- No parameters required
+
+**Response (Success):**
+```json
+{
+  "success": true,
+  "message": "Calibration complete",
+  "iterations": 20
+}
+```
+
+**Response (Error):**
+```json
+{
+  "error": "Error description"
+}
+```
+
+**Status Codes:**
+- `200`: Success (calibration complete)
+- `500`: Server error (display not initialized)
+
+**Example:**
+```bash
+curl -X POST http://raspberrypi.local:5000/api/calibrate
+```
+
+> **Note:** This is a blocking request that takes approximately 200 seconds to complete (20 iterations × 10 second intervals). The Gunicorn timeout is set to 120 seconds by default, so you may need to increase it in `gunicorn_config.py` when running calibration, or run the server in development mode with `python3 server.py`.
 
 ## How It Works
 
