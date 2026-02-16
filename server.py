@@ -7,11 +7,12 @@ Provides /api/display endpoint that accepts multipart file uploads.
 
 import logging
 import os
+import time
 from io import BytesIO
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 from epd import EPD
 from logger import setup_logging
@@ -210,6 +211,111 @@ def api_dimension():
 
     except Exception as e:
         logger.error(f"Error in /api/dimension endpoint: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+def _draw_calibration_frame(width, height, offset):
+    """
+    Draw a calibration frame with outward-pointing corner arrows and centered offset number.
+
+    Args:
+        width: Display width in pixels.
+        height: Display height in pixels.
+        offset: Current calibration offset (arrows move inward by this many pixels).
+
+    Returns:
+        PIL.Image with the calibration pattern.
+    """
+    img = Image.new("RGB", (width, height), (255, 255, 255))
+    draw = ImageDraw.Draw(img)
+    line_width = 2
+    wing = 10
+    shaft = 7
+
+    # Top-left: arrow tip at (offset, offset), wings along top and left edges
+    tl = (offset, offset)
+    draw.line([tl, (offset + wing, offset)], fill=0, width=line_width)
+    draw.line([tl, (offset, offset + wing)], fill=0, width=line_width)
+    draw.line([(offset + shaft, offset + shaft), tl], fill=0, width=line_width)
+
+    # Top-right: arrow tip at (width-1-offset, offset)
+    tr = (width - 1 - offset, offset)
+    draw.line([tr, (tr[0] - wing, offset)], fill=0, width=line_width)
+    draw.line([tr, (tr[0], offset + wing)], fill=0, width=line_width)
+    draw.line([(tr[0] - shaft, offset + shaft), tr], fill=0, width=line_width)
+
+    # Bottom-left: arrow tip at (offset, height-1-offset)
+    bl = (offset, height - 1 - offset)
+    draw.line([bl, (offset + wing, bl[1])], fill=0, width=line_width)
+    draw.line([bl, (offset, bl[1] - wing)], fill=0, width=line_width)
+    draw.line([(offset + shaft, bl[1] - shaft), bl], fill=0, width=line_width)
+
+    # Bottom-right: arrow tip at (width-1-offset, height-1-offset)
+    br = (width - 1 - offset, height - 1 - offset)
+    draw.line([br, (br[0] - wing, br[1])], fill=0, width=line_width)
+    draw.line([br, (br[0], br[1] - wing)], fill=0, width=line_width)
+    draw.line([(br[0] - shaft, br[1] - shaft), br], fill=0, width=line_width)
+
+    # Draw centered offset number
+    font = ImageFont.load_default()
+    text = str(offset)
+    bbox = draw.textbbox((0, 0), text, font=font)
+    text_w = bbox[2] - bbox[0]
+    text_h = bbox[3] - bbox[1]
+    draw.text(
+        ((width - text_w) // 2, (height - text_h) // 2),
+        text,
+        fill=0,
+        font=font,
+    )
+
+    return img
+
+
+def _calibrate(display_client, iterations=20, interval=10):
+    """
+    Run a blocking calibration sequence on the e-ink display.
+
+    Args:
+        display_client: DisplayClient instance.
+        iterations: Number of frames to display.
+        interval: Seconds between refreshes.
+    """
+    width = display_client.epd.width
+    height = display_client.epd.height
+
+    for i in range(iterations):
+        logger.info(f"Calibration iteration {i}/{iterations - 1}")
+        frame = _draw_calibration_frame(width, height, i)
+        display_client.display_image(frame)
+        if i < iterations - 1:
+            time.sleep(interval)
+
+
+@app.route("/api/calibrate", methods=["POST"])
+def api_calibrate():
+    """
+    API endpoint to run display calibration.
+    Displays 20 frames with corner arrows moving inward, 10 seconds apart.
+    """
+    try:
+        global client
+        if client is None:
+            logger.warning("Display not initialized for calibration request")
+            return jsonify({"error": "Display client not initialized"}), 500
+
+        logger.info("Starting display calibration")
+        _calibrate(client)
+        logger.info("Display calibration complete")
+
+        return jsonify({
+            "success": True,
+            "message": "Calibration complete",
+            "iterations": 20,
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error in /api/calibrate endpoint: {e}")
         return jsonify({"error": str(e)}), 500
 
 
